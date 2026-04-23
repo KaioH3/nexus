@@ -85,10 +85,38 @@ pub struct ResourceLimits {
 
 | CVE | Description | Nexus Protection |
 |-----|-------------|-----------------|
-| CVE-2025-49596 | MCP Inspector RCE | API key + origin validation |
-| CVE-2025-68143 | Git MCP prompt injection | WASM sandbox blocks execve() |
-| CVE-2025-34072 | Slack data exfiltration | Network syscalls blocked (socket=41) |
-| CVE-2026-0621 | ReDoS in TypeScript SDK | Binary protocol has no regex |
+| CVE-2025-49596 | MCP Inspector RCE | ✅ API key validation (constant-time hash) |
+| CVE-2025-68143 | Git MCP prompt injection | ✅ WASM sandbox blocks execve() |
+| CVE-2025-34072 | Slack data exfiltration | ✅ Network syscalls blocked (socket=41) |
+| CVE-2026-0621 | ReDoS in TypeScript SDK | ✅ Binary protocol has no regex |
+
+### Authentication
+
+Nexus Protocol implements API key validation with security best practices:
+
+```rust
+use nexus_protocol_core::ApiKeyConfig;
+
+// Load from NEXUS_API_KEY environment variable
+let config = ApiKeyConfig::from_env("NEXUS_API_KEY");
+
+// Or configure explicit keys
+let config = ApiKeyConfig::with_keys(&[
+    "nexus_sk_prod_key_12345",
+    "nexus_sk_dev_key_67890",
+]);
+
+// Validate incoming request
+config.validate(Some("nexus_sk_prod_key_12345"))?;
+```
+
+**Security features:**
+- Constant-time comparison (prevents timing attacks)
+- Format validation (length, allowed characters)
+- Hash-based key storage
+- Missing/Invalid API key error codes
+
+For mTLS, deploy behind a reverse proxy (nginx, traefik) with client certificates.
 
 ---
 

@@ -15,6 +15,7 @@ pub mod rate_limit;
 pub mod prompt_guard;
 pub mod binary_protocol;
 pub mod connection_pool;
+pub mod auth;
 
 pub use message::Message;
 pub use version::Version;
@@ -27,3 +28,4 @@ pub use rate_limit::{RateLimit, RateLimitTracker, TokenBucket};
 pub use prompt_guard::{PromptInjectionGuard, PromptInjectionError};
 pub use binary_protocol::{BinaryMessage, BinaryMsgType, BINARY_PROTOCOL_VERSION};
 pub use connection_pool::{ConnectionPool, PoolConfig, PooledConnection};
+pub use auth::ApiKeyConfig;
