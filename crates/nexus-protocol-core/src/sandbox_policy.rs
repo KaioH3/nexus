@@ -114,6 +114,7 @@ const BLOCKED_SYSCALLS: &[u32] = &[
     // Process operations
     56, // clone
     57, // fork
+    59, // execve
     60, // exit
     61, // wait4
     // Admin operations

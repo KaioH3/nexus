@@ -13,7 +13,7 @@ MCP (Model Context Protocol) has documented security issues. Nexus Protocol was 
 | Feature | MCP | Nexus Protocol |
 |---------|-----|----------------|
 | Sandbox | ❌ None | ✅ WASM sandbox |
-| Blocked syscalls | ❌ 0 | ✅ 18 |
+| Blocked syscalls | ❌ 0 | ✅ 19 |
 | Protocol | JSON | ✅ Binary (1.6x faster) |
 | Languages | TypeScript | ✅ Rust, Go, Python, TypeScript |
 | License | MIT | ✅ Apache 2.0 |
@@ -66,12 +66,12 @@ go get github.com/KaioH3/nexus/sdk/go
 **Nexus Protocol security model:**
 
 ```rust
-// 18 syscalls blocked by default
+// 19 syscalls blocked by default
 const BLOCKED_SYSCALLS: &[u32] = &[
     2, 3, 4, 5, 9, 10, 87, // filesystem (open, close, stat, fstat, mmap, munmap, unlink)
     41, 42, 43,            // network (socket, connect, accept)
-    56, 57, 60, 61,        // process (clone, fork, exit, wait4)
-    79, 85, 86, 137,       // admin (getdents, readlink, mprotect, kexec_load)
+    56, 57, 59, 60, 61,   // process (clone, fork, execve, exit, wait4)
+    79, 85, 86, 137,      // admin (getdents, readlink, mprotect, kexec_load)
 ];
 
 // Resource limits enforced
