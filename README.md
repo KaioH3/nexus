@@ -2,7 +2,7 @@
 
 **The sandbox-first protocol for AI agent security.**
 
-WASM sandbox. 17 dangerous syscalls blocked. Binary protocol. Apache 2.0.
+WASM sandbox. 19 dangerous syscalls blocked. Binary protocol. Apache 2.0.
 
 ---
 
@@ -14,7 +14,7 @@ MCP (Model Context Protocol) has documented security issues. Nexus Protocol was 
 |---------|-----|----------------|
 | Sandbox | ❌ None | ✅ WASM sandbox |
 | Blocked syscalls | ❌ 0 | ✅ 19 |
-| Protocol | JSON | ✅ Binary (1.6x faster) |
+| Protocol | JSON | ✅ Binary |
 | Languages | TypeScript | ✅ Rust, Go, Python, TypeScript |
 | License | MIT | ✅ Apache 2.0 |
 
@@ -70,8 +70,8 @@ go get github.com/KaioH3/nexus/sdk/go
 const BLOCKED_SYSCALLS: &[u32] = &[
     2, 3, 4, 5, 9, 10, 87, // filesystem (open, close, stat, fstat, mmap, munmap, unlink)
     41, 42, 43,            // network (socket, connect, accept)
-    56, 57, 59, 60, 61,   // process (clone, fork, execve, exit, wait4)
-    79, 85, 86, 137,      // admin (getdents, readlink, mprotect, kexec_load)
+    56, 57, 59, 60, 61,  // process (clone, fork, execve, exit, wait4)
+    79, 85, 86, 137,     // admin (getdents, readlink, mprotect, kexec_load)
 ];
 
 // Resource limits enforced
@@ -128,7 +128,7 @@ Clients                    Nexus Protocol                  Backend
 │ Python  │──────────────▶│  Message Router     │────────▶│ Ollama  │
 ├─────────┤               │                     │         │ (local) │
 │   Go    │──────────────▶│  WASM Sandbox       │         └─────────┘
-├─────────┤               │  (17 syscalls block)│
+├─────────┤               │  (19 syscalls block)│
 │   TS    │──────────────▶│                     │
 └─────────┘               └─────────────────────┘
 ```
@@ -138,17 +138,18 @@ Clients                    Nexus Protocol                  Backend
 ## Features
 
 - ✅ WASM sandbox with resource limits
-- ✅ 17 blocked dangerous syscalls
-- ✅ 4 predefined sandbox policies
+- ✅ 19 blocked dangerous syscalls
+- ✅ 3 predefined sandbox policies (zero trust, AI-generated code, development)
 - ✅ Multi-language SDK (Python, Go, TS, Rust)
 - ✅ Local Ollama support (14 models verified)
-- ✅ Binary protocol (1.6x faster than JSON)
+- ✅ Binary protocol (no JSON parsing overhead)
 - ✅ Streaming token support
 - ✅ Capability negotiation
 - ✅ Rate limiting (token bucket)
 - ✅ Connection pooling
 - ✅ Prompt injection guard
-- ✅ 52 tests passing
+- ✅ API key validation (constant-time hash)
+- ✅ 60 tests passing
 
 ---
 
@@ -156,10 +157,10 @@ Clients                    Nexus Protocol                  Backend
 
 | Metric | Value | Method |
 |--------|-------|--------|
-| Binary vs JSON | 1.6x faster | Measured: 10000 iterations |
+| Binary vs JSON | No parsing overhead | Code inspection |
 | Ollama models | 14 working | curl to localhost:11434 |
-| Syscalls blocked | 17 | Code inspection |
-| Tests | 52 passing | cargo test |
+| Syscalls blocked | 19 | Code inspection |
+| Tests | 60 passing | cargo test |
 
 ---
 
