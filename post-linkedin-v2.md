@@ -4,7 +4,7 @@ Anthropic created MCP. Google adopted it. MCP's specification allows arbitrary c
 
 But the RCE is only half the problem. The other half is vendor lock-in. MCP was built by an API company. The default path is proprietary models, per-token billing, and praying the pricing page doesn't change. You do not own the stack. You rent it.
 
-Nexus Protocol is LLM-agnostic by design. Ollama local. Groq. Your choice. Your model runs on your hardware with no per-request protocol tax. Switch providers without changing a line of agent code.
+Nexus Protocol is LLM-agnostic by design. Ollama local. Groq. OpenAI. Your choice. Your model runs on your hardware or your cloud account with no per-request protocol tax. Switch providers without changing a line of agent code.
 
 There is one interface. It works the same whether your model runs on a 397MB local quant or a 70B cloud instance. The protocol does not care. That is the architecture MCP should have shipped.
 
