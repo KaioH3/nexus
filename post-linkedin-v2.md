@@ -3,7 +3,7 @@ MCP became the standard with 84,000 GitHub stars and a documented hole: zero san
 I built Nexus Protocol to fix that at the protocol layer, not with wrappers.
 
 What ships today:
-19 syscalls blocked. WASM sandbox. Binary protocol. Three sandbox policies. Prompt injection guard. SDKs in Rust, Python, Go, TypeScript. Apache 2.0. 60 tests passing.
+19 syscalls blocked. WASM sandbox. Binary protocol. Three sandbox policies. Prompt injection guard. SDKs in Rust, Python, Go, and TypeScript. Apache 2.0. 60 tests passing.
 
 The demo that matters:
 MCP receives "rm -rf /" and executes it. Intended behavior.
