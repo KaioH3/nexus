@@ -2,7 +2,7 @@
 //!
 //! Implements token bucket algorithm for per-client rate limiting.
 
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Rate limit configuration per client tier.
 #[derive(Debug, Clone)]

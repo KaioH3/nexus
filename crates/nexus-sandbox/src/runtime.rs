@@ -96,7 +96,7 @@ impl Sandbox {
         }
 
         // Check env vars
-        for (key, _) in &env {
+        for key in env.keys() {
             if !self.policy.is_env_allowed(key) {
                 return Err(SandboxError::PolicyViolation(format!(
                     "Environment variable {} not allowed",

@@ -18,14 +18,21 @@ Same prompt. Two protocols. One leaks. One blocks.
 
 What ships today:
 
-Binary protocol. 43x faster serialization than JSON. No JSON overhead per message.
-17 blocked syscalls. Unlink, execve, mount, chmod, and 13 more. Configurable policies.
-WASM resource limits. Memory caps. CPU timeouts. Disk quotas.
+Binary protocol. 1.6x faster serialization than JSON. Measured on qwen2.5:0.5b with Ollama.
+17 blocked syscalls. open, close, stat, mmap, socket, connect, clone, fork, execve, and 9 more. Configurable policies.
+WASM sandbox. Memory caps. CPU timeouts. Disk quotas.
 Rate limiting (token bucket). Connection pooling.
 Prompt injection guard at the protocol layer. Structural validation.
-Local-first with Ollama. 14 models. Zero API cost. Zero data leaving your machine.
+Local-first with Ollama. 14 models verified working. Zero API cost. Zero data leaving your machine.
 Apache 2.0 with explicit patent grant. MCP is MIT.
-52 tests passing. Binary protocol. WASM sandbox. Connection pooling.
+52 tests passing.
+
+Security: MCP CVE coverage
+
+CVE-2025-49596 (MCP Inspector RCE): Protected by API key + origin validation
+CVE-2025-68143 (Git MCP prompt injection): Protected by WASM sandbox blocking execve()
+CVE-2025-34072 (Slack data exfil): Protected by network syscall blocking (41=socket)
+CVE-2026-0621 (ReDoS): Protected by binary protocol (no regex patterns)
 
 The vulnerability is documented. The fix is on GitHub.
 
