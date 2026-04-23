@@ -21,7 +21,7 @@ What ships today:
 Binary protocol. 43x faster serialization than JSON. No JSON overhead per message.
 17 blocked syscalls. Unlink, execve, mount, chmod, and 13 more. Configurable policies.
 WASM resource limits. Memory caps. CPU timeouts. Disk quotas.
-API key verification. mTLS handshake. MCP has neither.
+Rate limiting (token bucket). Connection pooling.
 Prompt injection guard at the protocol layer. Structural validation.
 Local-first with Ollama. 14 models. Zero API cost. Zero data leaving your machine.
 Apache 2.0 with explicit patent grant. MCP is MIT.
