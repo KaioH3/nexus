@@ -1,0 +1,30 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/nexus-protocol-core",
+    "crates/nexus-sandbox",
+    "crates/nexus-ollama",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+authors = ["Kaio <kaio@vortex.ia.br>"]
+repository = "https://github.com/KaioH3/nexus"
+homepage = "https://nexusprotocol.ai"
+description = "Secure protocol for sandboxed AI code execution"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+bytes = { version = "1", features = ["serde"] }
+url = "2"
+reqwest = { version = "0.12", features = ["json"] }

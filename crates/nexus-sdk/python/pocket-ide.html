@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pocket IDE — Replit de Bolso</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+  <style>
+    :root {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #252526;
+      --bg-tertiary: #333333;
+      --bg-input: #3c3c3c;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --accent: #0078d4;
+      --accent-hover: #1084d9;
+      --success: #4ec9b0;
+      --warning: #dcdcaa;
+      --error: #f14c4c;
+      --border: #3c3c3c;
+      --toolbar-height: 40px;
+      --sidebar-width: 300px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      height: var(--toolbar-height);
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    .toolbar-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .toolbar-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .toolbar-btn.primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .toolbar-btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .toolbar-spacer {
+      flex: 1;
+    }
+
+    .logo {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* LANGUAGE SELECTOR */
+    .lang-select {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* MAIN LAYOUT */
+    .main {
+      display: flex;
+      height: calc(100vh - var(--toolbar-height));
+    }
+
+    /* EDITOR PANEL */
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* TABS */
+    .tabs {
+      background: var(--bg-secondary);
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      opacity: 0.5;
+    }
+
+    .tab-close:hover {
+      background: var(--bg-tertiary);
+      opacity: 1;
+    }
+
+    /* EDITOR CONTAINER */
+    #editor {
+      flex: 1;
+      min-height: 200px;
+    }
+
+    /* TERMINAL PANEL */
+    .terminal-panel {
+      height: 200px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-header {
+      background: var(--bg-secondary);
+      padding: 6px 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dot.red { background: #ff5f56; }
+    .terminal-dot.yellow { background: #ffbd2e; }
+    .terminal-dot.green { background: #27c93f; }
+
+    #terminal {
+      flex: 1;
+      padding: 8px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow-y: auto;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-actions {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ai-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.15s;
+    }
+
+    .ai-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .ai-btn-icon {
+      font-size: 18px;
+    }
+
+    .ai-output {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .ai-message {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .ai-message.user {
+      background: var(--accent);
+      color: white;
+    }
+
+    .ai-message.assistant {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+    }
+
+    /* STATUS BAR */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 24px;
+      background: var(--accent);
+      color: white;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* OUTPUT AREA */
+    .output {
+      background: #0d0d0d;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #10b981;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .output.error {
+      color: #ef4444;
+    }
+
+    /* MOBILE */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .toolbar {
+        padding: 0 8px;
+      }
+
+      .toolbar-btn span {
+        display: none;
+      }
+
+      .terminal-panel {
+        height: 150px;
+      }
+    }
+
+    /* LOADING */
+    .loading {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 1000;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* RESIZE HANDLE */
+    .resize-handle {
+      height: 4px;
+      background: var(--border);
+      cursor: ns-resize;
+      transition: background 0.15s;
+    }
+
+    .resize-handle:hover {
+      background: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <!-- LOADING SCREEN -->
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Carregando Pocket IDE...</div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Pocket IDE
+    </div>
+
+    <div class="toolbar-spacer"></div>
+
+    <select class="lang-select" id="language">
+      <option value="python">Python</option>
+      <option value="javascript">JavaScript</option>
+      <option value="typescript">TypeScript</option>
+      <option value="html">HTML</option>
+      <option value="css">CSS</option>
+      <option value="rust">Rust</option>
+      <option value="go">Go</option>
+      <option value="java">Java</option>
+      <option value="cpp">C++</option>
+      <option value="c">C</option>
+    </select>
+
+    <button class="toolbar-btn" id="newFile">
+      <span>📄</span> Novo
+    </button>
+
+    <button class="toolbar-btn" id="openFile">
+      <span>📂</span> Abrir
+    </button>
+
+    <button class="toolbar-btn" id="saveFile">
+      <span>💾</span> Salvar
+    </button>
+
+    <button class="toolbar-btn primary" id="runCode">
+      <span>▶</span> Executar
+    </button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <!-- EDITOR PANEL -->
+    <div class="editor-panel">
+      <!-- TABS -->
+      <div class="tabs">
+        <div class="tab active" data-file="main.py">
+          <span>📄</span> main.py
+          <span class="tab-close">×</span>
+        </div>
+        <div class="tab" data-file="test.py">
+          <span>📄</span> test.py
+          <span class="tab-close">×</span>
+        </div>
+      </div>
+
+      <!-- EDITOR -->
+      <div id="editor"></div>
+
+      <!-- RESIZE HANDLE -->
+      <div class="resize-handle" id="resizeHandle"></div>
+
+      <!-- TERMINAL -->
+      <div class="terminal-panel" id="terminalPanel">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <div class="terminal-dot red"></div>
+            <div class="terminal-dot yellow"></div>
+            <div class="terminal-dot green"></div>
+          </div>
+          <span>Terminal</span>
+        </div>
+        <div id="terminal"></div>
+      </div>
+    </div>
+
+    <!-- AI SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-header">✨ Magic AI</div>
+
+      <div class="ai-actions">
+        <button class="ai-btn" data-action="explain">
+          <span class="ai-btn-icon">💡</span>
+          <span>Explicar código</span>
+        </button>
+
+        <button class="ai-btn" data-action="fix">
+          <span class="ai-btn-icon">🐛</span>
+          <span>Corrigir bugs</span>
+        </button>
+
+        <button class="ai-btn" data-action="test">
+          <span class="ai-btn-icon">🧪</span>
+          <span>Adicionar testes</span>
+        </button>
+
+        <button class="ai-btn" data-action="refactor">
+          <span class="ai-btn-icon">♻️</span>
+          <span>Refatorar</span>
+        </button>
+
+        <button class="ai-btn" data-action="optimize">
+          <span class="ai-btn-icon">⚡</span>
+          <span>Otimizar performance</span>
+        </button>
+      </div>
+
+      <div class="sidebar-header">💬 Chat</div>
+
+      <div class="ai-output" id="aiOutput">
+        <div class="ai-message assistant">
+          Olá! Selecione um código e clique em uma ação, ou digite sua pergunta abaixo.
+        </div>
+      </div>
+
+      <div style="padding: 12px; border-top: 1px solid var(--border);">
+        <textarea
+          id="chatInput"
+          placeholder="Digite sua pergunta..."
+          style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); color: var(--text-primary); padding: 10px; border-radius: 6px; font-size: 13px; resize: none; height: 60px; font-family: inherit;"
+        ></textarea>
+        <button class="ai-btn" style="width: 100%; margin-top: 8px; justify-content: center;" id="sendChat">
+          <span>Enviar</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <span class="status-item">Ln 1, Col 1</span>
+    <span class="status-item">UTF-8</span>
+    <span class="status-item" id="langStatus">Python</span>
+    <span class="status-item" style="margin-left: auto;">Pocket IDE v0.1</span>
+  </div>
+
+  <!-- MONACO EDITOR (via CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+
+  <script>
+    // ============================================
+    // POCKET IDE — Main Application
+    // ============================================
+
+    class PocketIDE {
+      constructor() {
+        this.editor = null;
+        this.terminal = null;
+        this.files = new Map();
+        this.currentFile = 'main.py';
+        this.aiMessages = [];
+        this.groqApiKey = null;
+
+        this.init();
+      }
+
+      async init() {
+        // Load Groq API key from localStorage
+        this.groqApiKey = localStorage.getItem('groq_api_key');
+
+        // Initialize Monaco Editor
+        await this.initEditor();
+
+        // Initialize Terminal (simple div-based for now)
+        this.initTerminal();
+
+        // Setup event listeners
+        this.setupEvents();
+
+        // Setup file operations
+        this.setupFiles();
+
+        // Setup AI
+        this.setupAI();
+
+        // Hide loading screen
+        document.getElementById('loading').style.display = 'none';
+
+        // Print welcome message
+        this.printToTerminal('Pocket IDE carregado! 🚀\n');
+        this.printToTerminal('Digite seu código e clique em Executar, ou use Magic AI.\n');
+      }
+
+      async initEditor() {
+        return new Promise((resolve) => {
+          require.config({
+            paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }
+          });
+
+          require(['vs/editor/editor.main'], () => {
+            // Define custom theme
+            monaco.editor.defineTheme('pocket-dark', {
+              base: 'vs-dark',
+              inherit: true,
+              rules: [],
+              colors: {
+                'editor.background': '#1e1e1e',
+                'editor.foreground': '#d4d4d4',
+              }
+            });
+
+            // Create editor
+            this.editor = monaco.editor.create(document.getElementById('editor'), {
+              value: `# Pocket IDE - Digite seu código aqui
+import sys
+
+def hello(name):
+    return f"Hello, {name}!"
+
+if __name__ == "__main__":
+    name = input("Qual é o seu nome? ")
+    print(hello(name))
+`,
+              language: 'python',
+              theme: 'pocket-dark',
+              fontSize: 14,
+              fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+              minimap: { enabled: true },
+              scrollBeyondLastLine: false,
+              automaticLayout: true,
+              tabSize: 4,
+              wordWrap: 'on',
+              lineNumbers: 'on',
+              renderWhitespace: 'selection',
+              bracketPairColorization: { enabled: true },
+            });
+
+            resolve();
+          });
+        });
+      }
+
+      initTerminal() {
+        this.terminal = document.getElementById('terminal');
+      }
+
+      printToTerminal(text, isError = false) {
+        const output = document.createElement('div');
+        output.className = isError ? 'output error' : 'output';
+        output.textContent = text;
+        this.terminal.appendChild(output);
+        this.terminal.scrollTop = this.terminal.scrollHeight;
+      }
+
+      setupEvents() {
+        // Language selector
+        document.getElementById('language').addEventListener('change', (e) => {
+          const lang = e.target.value;
+          monaco.editor.setModelLanguage(this.editor.getModel(), lang);
+          document.getElementById('langStatus').textContent = lang.charAt(0).toUpperCase() + lang.slice(1);
+
+          // Update file extension
+          const currentTab = document.querySelector('.tab.active');
+          const currentName = currentTab.dataset.file;
+          const ext = this.getExtension(lang);
+          if (!currentName.endsWith(ext)) {
+            const newName = currentName.replace(/\.[^.]+$/, ext);
+            currentTab.querySelector('span:nth-child(2)').textContent = newName;
+            currentTab.dataset.file = newName;
+          }
+        });
+
+        // Run button
+        document.getElementById('runCode').addEventListener('click', () => this.runCode());
+
+        // Keyboard shortcut (Ctrl+Enter)
+        this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => this.runCode());
+
+        // AI buttons
+        document.querySelectorAll('.ai-btn[data-action]').forEach(btn => {
+          btn.addEventListener('click', () => this.handleAIAction(btn.dataset.action));
+        });
+
+        // Chat
+        document.getElementById('sendChat').addEventListener('click', () => this.sendChat());
+        document.getElementById('chatInput').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendChat();
+          }
+        });
+
+        // File buttons
+        document.getElementById('newFile').addEventListener('click', () => this.newFile());
+        document.getElementById('openFile').addEventListener('click', () => this.openFile());
+        document.getElementById('saveFile').addEventListener('click', () => this.saveFile());
+
+        // Tab close buttons
+        document.querySelectorAll('.tab-close').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            btn.closest('.tab').remove();
+          });
+        });
+
+        // Terminal resize
+        this.setupResize();
+      }
+
+      setupResize() {
+        const handle = document.getElementById('resizeHandle');
+        const terminal = document.getElementById('terminalPanel');
+        let isResizing = false;
+
+        handle.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          document.body.style.cursor = 'ns-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizing) return;
+          const newHeight = window.innerHeight - e.clientY;
+          terminal.style.height = Math.max(100, Math.min(500, newHeight)) + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+          isResizing = false;
+          document.body.style.cursor = '';
+        });
+      }
+
+      setupFiles() {
+        // Initialize with default file
+        this.files.set('main.py', this.editor.getValue());
+      }
+
+      setupAI() {
+        // Check if API key is set
+        if (!this.groqApiKey) {
+          this.addAIMessage('assistant', 'Configure sua Groq API key para usar Magic AI. Digite: /setkey SUA_CHAVE');
+        }
+      }
+
+      async runCode() {
+        const code = this.editor.getValue();
+        const lang = document.getElementById('language').value;
+
+        this.printToTerminal(`\n▶ Executando ${lang}...\n`);
+
+        if (lang === 'python') {
+          // Simple Python simulation (real implementation would use WASM sandbox)
+          try {
+            // For demo, we'll simulate execution
+            this.printToTerminal('[Simulação] Python executado com sucesso!\n');
+            this.printToTerminal('Para execução real, use o servidor WASM sandbox.\n');
+          } catch (err) {
+            this.printToTerminal(err.message, true);
+          }
+        } else if (lang === 'javascript') {
+          try {
+            // Execute JavaScript in sandbox
+            const result = eval(code);
+            this.printToTerminal(result !== undefined ? String(result) : 'undefined');
+          } catch (err) {
+            this.printToTerminal(err.message, true);
+          }
+        } else {
+          this.printToTerminal(`[Info] Execução para ${lang} requer backend WASM.\n`);
+        }
+      }
+
+      async handleAIAction(action) {
+        const selection = this.editor.getSelection();
+        const selectedText = this.editor.getModel().getValueInRange(selection) || this.editor.getValue();
+
+        if (!selectedText.trim()) {
+          this.addAIMessage('assistant', 'Selecione ou escreva algum código primeiro.');
+          return;
+        }
+
+        // Add user selection
+        this.addAIMessage('user', `Ação: ${action}\n\nCódigo:\n${selectedText}`);
+
+        // Show loading
+        const loadingMsg = this.addAIMessage('assistant', '🤖 Pensando...');
+
+        try {
+          const response = await this.callGroq(selectedText, action);
+          loadingMsg.textContent = response;
+        } catch (err) {
+          loadingMsg.textContent = 'Erro: ' + err.message;
+        }
+      }
+
+      async sendChat() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Handle commands
+        if (message.startsWith('/setkey ')) {
+          const key = message.slice(8).trim();
+          localStorage.setItem('groq_api_key', key);
+          this.groqApiKey = key;
+          this.addAIMessage('assistant', '✅ API key configurada!');
+          input.value = '';
+          return;
+        }
+
+        this.addAIMessage('user', message);
+        input.value = '';
+
+        const loadingMsg = this.addAIMessage('assistant', '🤖 Pensando...');
+
+        try {
+          const response = await this.callGroq(message, 'chat');
+          loadingMsg.textContent = response;
+        } catch (err) {
+          loadingMsg.textContent = 'Erro: ' + err.message;
+        }
+      }
+
+      async callGroq(prompt, action) {
+        if (!this.groqApiKey) {
+          throw new Error('API key não configurada. Digite /setkey SUA_CHAVE');
+        }
+
+        // Build prompt based on action
+        let systemPrompt = 'Você é um assistente de programação.';
+        let userPrompt = prompt;
+
+        switch (action) {
+          case 'explain':
+            systemPrompt = 'Você é um professor de programação. Explique o código de forma clara e simples.';
+            break;
+          case 'fix':
+            systemPrompt = 'Você é um expert em debugging. Encontre e corrija os bugs no código.';
+            break;
+          case 'test':
+            systemPrompt = 'Você é um engineer de QA. Escreva testes unitários para o código.';
+            break;
+          case 'refactor':
+            systemPrompt = 'Você é um expert em clean code. Refatore o código para ser mais legível e manutenível.';
+            break;
+          case 'optimize':
+            systemPrompt = 'Você é um expert em performance. Otimize o código para ser mais rápido e eficiente.';
+            break;
+        }
+
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.groqApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 1024,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'Erro na API');
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+      }
+
+      addAIMessage(role, content) {
+        const output = document.getElementById('aiOutput');
+        const msg = document.createElement('div');
+        msg.className = `ai-message ${role}`;
+        msg.textContent = content;
+        output.appendChild(msg);
+        output.scrollTop = output.scrollHeight;
+        return msg;
+      }
+
+      newFile() {
+        const name = prompt('Nome do arquivo:', 'novo.py');
+        if (!name) return;
+
+        // Add new tab
+        const tabs = document.querySelector('.tabs');
+        const tab = document.createElement('div');
+        tab.className = 'tab active';
+        tab.dataset.file = name;
+        tab.innerHTML = `
+          <span>📄</span> ${name}
+          <span class="tab-close">×</span>
+        `;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tabs.appendChild(tab);
+
+        // Clear editor
+        this.editor.setValue('');
+        this.currentFile = name;
+      }
+
+      async openFile() {
+        // Check for File System Access API
+        if ('showOpenFilePicker' in window) {
+          const [fileHandle] = await window.showOpenFilePicker();
+          const file = await fileHandle.getFile();
+          const content = await file.text();
+          this.editor.setValue(content);
+          this.files.set(file.name, content);
+
+          // Update tab
+          document.querySelector('.tab.active span:nth-child(2)').textContent = file.name;
+          this.currentFile = file.name;
+        } else {
+          // Fallback
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.py,.js,.ts,.html,.css,.go,.rs,.java,.cpp,.c';
+          input.onchange = async (e) => {
+            const file = e.target.files[0];
+            const content = await file.text();
+            this.editor.setValue(content);
+            this.files.set(file.name, content);
+            document.querySelector('.tab.active span:nth-child(2)').textContent = file.name;
+            this.currentFile = file.name;
+          };
+          input.click();
+        }
+      }
+
+      async saveFile() {
+        const content = this.editor.getValue();
+        this.files.set(this.currentFile, content);
+
+        if ('showSaveFilePicker' in window) {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: this.currentFile,
+          });
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          this.printToTerminal(`\n💾 Arquivo salvo: ${this.currentFile}\n`);
+        } else {
+          // Create download
+          const blob = new Blob([content], { type: 'text/plain' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = this.currentFile;
+          a.click();
+          URL.revokeObjectURL(url);
+          this.printToTerminal(`\n💾 Download iniciado: ${this.currentFile}\n`);
+        }
+      }
+
+      getExtension(lang) {
+        const extensions = {
+          python: '.py',
+          javascript: '.js',
+          typescript: '.ts',
+          html: '.html',
+          css: '.css',
+          rust: '.rs',
+          go: '.go',
+          java: '.java',
+          cpp: '.cpp',
+          c: '.c',
+        };
+        return extensions[lang] || '.txt';
+      }
+    }
+
+    // ============================================
+    // INITIALIZE
+    // ============================================
+
+    window.addEventListener('DOMContentLoaded', () => {
+      window.pocket = new PocketIDE();
+    });
+  </script>
+</body>
+</html>
