@@ -352,6 +352,29 @@ class TestProviders:
         provider = OllamaProvider(base_url="http://custom:11434")
         assert provider.base_url == "http://custom:11434"
 
+    def test_openai_provider_requires_key(self):
+        """OpenAIProvider requires API key."""
+        from nexus_protocol.providers import OpenAIProvider
+        with pytest.raises(ValueError, match="API key"):
+            OpenAIProvider(api_key="")
+
+    def test_openai_provider_with_key(self):
+        """OpenAIProvider works with valid key."""
+        from nexus_protocol.providers import OpenAIProvider
+        provider = OpenAIProvider(api_key="sk-test-key-12345")
+        assert provider.api_key == "sk-test-key-12345"
+        assert provider.base_url == "https://api.openai.com/v1"
+        assert provider.DEFAULT_MODEL == "gpt-4o"
+
+    def test_openai_provider_custom_url(self):
+        """OpenAIProvider works with custom base URL (e.g., Azure)."""
+        from nexus_protocol.providers import OpenAIProvider
+        provider = OpenAIProvider(
+            api_key="sk-test-key",
+            base_url="https://custom.openai.azure.com/v1"
+        )
+        assert provider.base_url == "https://custom.openai.azure.com/v1"
+
 
 # ============================================================================
 # Run All Smoke Tests

@@ -28,6 +28,7 @@ from nexus_protocol.providers import (
     Provider,
     GroqProvider,
     OllamaProvider,
+    OpenAIProvider,
     GenerationOptions,
     GenerationResult,
 )
@@ -378,6 +379,10 @@ class TestProviderInterface:
     def test_ollama_provider_inheritance(self):
         """OllamaProvider inherits from Provider."""
         assert issubclass(OllamaProvider, Provider)
+
+    def test_openai_provider_inheritance(self):
+        """OpenAIProvider inherits from Provider."""
+        assert issubclass(OpenAIProvider, Provider)
 
 
 # ============================================================================

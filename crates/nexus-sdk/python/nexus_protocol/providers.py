@@ -22,6 +22,7 @@ import aiohttp
 __all__ = [
     "GroqProvider",
     "OllamaProvider",
+    "OpenAIProvider",
     "Provider",
     "GenerationOptions",
     "GenerationResult",
@@ -251,6 +252,191 @@ class GroqProvider(Provider):
 
     async def list_models(self) -> list[dict]:
         """List available Groq models."""
+        client = await self._get_client()
+
+        async with client.get(
+            f"{self.base_url}/models",
+            headers={"Authorization": f"Bearer {self.api_key}"},
+        ) as resp:
+            if resp.status != 200:
+                return []
+            data = await resp.json()
+            return data.get("data", [])
+
+    async def close(self) -> None:
+        """Close the HTTP client."""
+        if self._client and not self._client.closed:
+            await self._client.close()
+
+
+# ============================================================================
+# OpenAI Provider (Cloud - GPT Models)
+# ============================================================================
+
+class OpenAIProvider(Provider):
+    """
+    OpenAI cloud provider — GPT-4, GPT-4o, GPT-4o-mini, o1, o1-mini.
+
+    Features:
+    - GPT-4o and o1 models
+    - Vision support
+    - Streaming support
+    - Function calling
+
+    Example:
+        >>> provider = OpenAIProvider(api_key="sk-...")
+        >>> result = await provider.generate("Explain quantum computing")
+        >>> print(result.output)
+    """
+
+    BASE_URL = "https://api.openai.com/v1"
+    DEFAULT_MODEL = "gpt-4o"
+
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        base_url: Optional[str] = None,
+        timeout: int = 120,
+    ):
+        if not api_key:
+            raise ValueError("API key is required for OpenAIProvider")
+
+        self.api_key = api_key
+        self.base_url = base_url or self.BASE_URL
+        self.timeout = timeout
+        self._client: Optional[aiohttp.ClientSession] = None
+
+    async def _get_client(self) -> aiohttp.ClientSession:
+        if self._client is None or self._client.closed:
+            self._client = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            )
+        return self._client
+
+    async def generate(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        options: Optional[GenerationOptions] = None,
+    ) -> GenerationResult:
+        """
+        Generate text with OpenAI's GPT models.
+
+        Args:
+            prompt: The prompt to generate from
+            model: Model name (default: gpt-4o)
+            options: Generation options
+
+        Returns:
+            GenerationResult with output and metadata
+        """
+        import time
+        start = time.monotonic()
+
+        model = model or self.DEFAULT_MODEL
+        options = options or GenerationOptions()
+
+        body = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": options.temperature,
+            "max_tokens": options.max_tokens,
+            "top_p": options.top_p,
+            "stream": False,
+        }
+
+        if options.stop:
+            body["stop"] = options.stop
+
+        client = await self._get_client()
+
+        async with client.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=body,
+        ) as resp:
+            if resp.status == 401:
+                raise ValueError("Invalid OpenAI API key")
+            if resp.status == 429:
+                raise ValueError("OpenAI rate limit exceeded")
+            if resp.status != 200:
+                text = await resp.text()
+                raise ValueError(f"OpenAI API error {resp.status}: {text}")
+
+            data = await resp.json()
+
+            duration_ms = int((time.monotonic() - start) * 1000)
+
+            return GenerationResult(
+                output=data["choices"][0]["message"]["content"],
+                model=data["model"],
+                prompt_tokens=data["usage"]["prompt_tokens"],
+                completion_tokens=data["usage"]["completion_tokens"],
+                total_tokens=data["usage"]["total_tokens"],
+                duration_ms=duration_ms,
+            )
+
+    async def generate_streaming(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        options: Optional[GenerationOptions] = None,
+    ) -> AsyncIterator[str]:
+        """
+        Streaming generation with OpenAI.
+
+        Yields tokens as they are generated.
+        """
+        model = model or self.DEFAULT_MODEL
+        options = options or GenerationOptions()
+
+        body = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": options.temperature,
+            "max_tokens": options.max_tokens,
+            "top_p": options.top_p,
+            "stream": True,
+        }
+
+        if options.stop:
+            body["stop"] = options.stop
+
+        client = await self._get_client()
+
+        async with client.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=body,
+        ) as resp:
+            if resp.status != 200:
+                text = await resp.text()
+                raise ValueError(f"OpenAI API error {resp.status}: {text}")
+
+            async for line in resp.content:
+                if line:
+                    line = line.decode("utf-8").strip()
+                    if line.startswith("data:"):
+                        if line.startswith("data: [DONE]"):
+                            break
+                        try:
+                            data = json.loads(line[5:])
+                            if "choices" in data and len(data["choices"]) > 0:
+                                delta = data["choices"][0].get("delta", {})
+                                if "content" in delta:
+                                    yield delta["content"]
+                        except json.JSONDecodeError:
+                            continue
+
+    async def list_models(self) -> list[dict]:
+        """List available OpenAI models."""
         client = await self._get_client()
 
         async with client.get(
