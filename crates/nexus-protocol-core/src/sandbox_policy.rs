@@ -104,6 +104,7 @@ const BLOCKED_SYSCALLS: &[u32] = &[
     5,  // fstat
     9,  // mmap
     10, // munmap
+    87, // unlink (delete files)
     85, // readlink
     86, // mprotect
     // Network operations

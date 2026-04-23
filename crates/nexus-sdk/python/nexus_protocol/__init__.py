@@ -150,7 +150,7 @@ class SandboxPolicy:
             allowed_paths=[],
             allowed_network=False,
             allowed_env=[],
-            blocked_syscalls=[2, 3, 4, 5, 9, 10, 41, 42, 43, 56, 57, 60, 61, 79, 85, 86, 137],
+            blocked_syscalls=[2, 3, 4, 5, 9, 10, 87, 41, 42, 43, 56, 57, 60, 61, 79, 85, 86, 137],
         )
 
     @classmethod
@@ -162,7 +162,7 @@ class SandboxPolicy:
             allowed_paths=["/tmp"],
             allowed_network=False,
             allowed_env=["HOME", "TMP"],
-            blocked_syscalls=[2, 3, 4, 5, 9, 10, 41, 42, 43, 56, 57, 60, 61, 79, 85, 86, 137],
+            blocked_syscalls=[2, 3, 4, 5, 9, 10, 87, 41, 42, 43, 56, 57, 60, 61, 79, 85, 86, 137],
         )
 
     @classmethod

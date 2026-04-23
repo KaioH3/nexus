@@ -1,13 +1,13 @@
-MCP has 84,000 GitHub stars and a documented RCE they call "intended behavior." I built the fix.
+MCP became the standard with 84,000 GitHub stars and a documented hole: zero sandbox, zero authentication, RCE by design.
 
-Anthropic created MCP. Google adopted it. Thousands of production servers run it. Their specification allows arbitrary command execution with no sandbox and no authentication. Anthropic confirmed the behavior is by design.
+I built Nexus Protocol to fix that at the protocol layer, not with wrappers.
 
-I built Nexus Protocol. WASM sandbox with 17 dangerous syscalls blocked before your kernel sees them. Binary protocol with no JSON parsing overhead and no text negotiation between agent and system. Three sandbox policies configurable per execution: zero trust, AI-generated code, development. Prompt injection guard at the protocol layer, not a regex bolted on after the fact. Multi-language SDKs in Rust, Python, Go, and TypeScript. Local-first with Ollama. You bring your model, you control your costs, the protocol takes nothing. Apache 2.0 with explicit patent grant. 60 tests passing. Zero failures.
+What ships today:
+18 syscalls blocked. WASM sandbox. Binary protocol. Three sandbox policies. Prompt injection guard. SDKs in Rust, Python, Go, TypeScript. Apache 2.0. 60 tests passing.
 
-Sandboxing is not a feature. It is the foundation. If your agent can call execve() without a sandbox, you do not have a secure agent. You have a polite backdoor.
+The demo that matters:
+MCP receives "rm -rf /" and executes it. Intended behavior.
+Nexus Protocol blocks syscall 87 (unlink) before the kernel sees it.
 
-I am building Oscar CLI as the reference code agent implementation. If you want to test it before launch, DM me.
-
-github.com/KaioH3/nexus
-
-#AISecurity #MCP #NexusProtocol #Rust #OpenSource
+Repo: github.com/KaioH3/nexus
+Apache 2.0. Read the spec. Break the sandbox. Tell me what you find.
